@@ -30,10 +30,11 @@ Long only, at most one open position:
   is at least +30 bps.
 - **Dip entry.** The close is at least 60 bps under EMA(45), RSI(14)
   is 32 or lower, and the bar closed up.
-- **Exits.** Stop 120 bps under entry cost, trailing stop 70 bps
-  under the peak close since entry (only while in profit), and a
-  300-bar maximum hold. A 30-bar cooldown follows every exit.
-- **Size.** 90% of cash per entry. No entries before 90 bars of
+- **Exits.** Stop 120 bps under entry cost, take-profit 150 bps
+  over entry cost, trailing stop 70 bps under the peak close since
+  entry (only while in profit), and a 300-bar maximum hold. A
+  30-bar cooldown follows every exit.
+- **Size.** 95% of cash per entry. No entries before 90 bars of
   history, and none in the final hour of the window.
 
 The bot is deterministic: no clock, no network, no environment reads,
@@ -43,6 +44,6 @@ no randomness. The same bars always produce the same orders.
 
 Graded with the kit's own command
 (`makefun grade-local --driver process`) on the frozen 24-hour dev
-window: net PnL **+10.12 USDC** after all fees, 4 trades, maximum
-drawdown 0.88%, no rejected orders. The race window is unseen prices,
+window: net PnL **+12.99 USDC** after all fees, 4 trades, maximum
+drawdown 0.76%, no rejected orders. The race window is unseen prices,
 so no result there is guaranteed.

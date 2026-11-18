@@ -15,12 +15,16 @@
 //   * Dip entry: the close sits at least 60 bps under the slow EMA,
 //     RSI(14) is 32 or lower, and the current bar closed up. This buys
 //     an oversold bounce only once buyers step back in.
-//   * Exits: a stop 120 bps under the entry cost, a trailing stop
-//     70 bps under the highest close since entry (armed only while in
-//     profit), and a 300-bar maximum hold. After any exit the bot rests
-//     30 bars before looking for a new entry, so one whipsaw cannot
-//     chain into many losing trades.
-//   * Size: 90% of cash per entry. The pool is deep enough that this
+//   * Exits: a stop 120 bps under the entry cost, a take-profit at
+//     150 bps over the entry cost, a trailing stop 70 bps under the
+//     highest close since entry (armed only while in profit), and a
+//     300-bar maximum hold. The take-profit banks a strong move
+//     instead of riding every winner to the hold limit and giving
+//     part of it back: in a 1-minute market a +150 bps move is a
+//     large one, and the round trip already costs roughly 30 bps.
+//     After any exit the bot rests 30 bars before looking for a new
+//     entry, so one whipsaw cannot chain into many losing trades.
+//   * Size: 95% of cash per entry. The pool is deep enough that this
 //     keeps price impact modest while still making a caught move pay.
 //
 // Determinism: no clock, no network, no environment reads, no random
@@ -40,11 +44,12 @@ const DIP_MIN_BPS = 60; // how far under the slow EMA a dip entry needs
 const RSI_PERIOD = 14;
 const RSI_MAX_DIP = 32;
 const STOP_BPS = 120; // stop under entry cost
+const TAKE_PROFIT_BPS = 150; // bank a strong move over entry cost
 const TRAIL_BPS = 70; // trailing stop under the peak close since entry
 const MAX_HOLD_BARS = 300;
 const COOLDOWN_BARS = 30;
-const SIZE_NUM = 9n; // 90% of cash
-const SIZE_DEN = 10n;
+const SIZE_NUM = 19n; // 95% of cash
+const SIZE_DEN = 20n;
 const MAX_SLIPPAGE_BPS = 100;
 const MIN_HISTORY = 90; // bars of closes before any entry: the slow EMA
 // and RSI need time to settle, or an early dip signal fires while the
@@ -159,6 +164,7 @@ class Bot {
       const trailBps = ((close - this.peakClose!) * 10000) / this.peakClose!;
       const shouldSell =
         pnlBps <= -STOP_BPS ||
+        pnlBps >= TAKE_PROFIT_BPS ||
         (pnlBps > 0 && trailBps <= -TRAIL_BPS) ||
         this.holdBars >= MAX_HOLD_BARS;
       if (shouldSell) {
